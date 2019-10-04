@@ -4,12 +4,24 @@
 
 using namespace std;
 
-void parallelOddEvenSort(int array[], int length) {
+void parallelOddSort(int array[], int length) {
+    
+}
+
+void parallelEvenSort(int array[], int length) {
 
 }
 
 
-int main() {
+int main(int argc, char** argv) {
+    MPI_Init(&argc, &argv);
+
+    int process_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &process_size);
+
+    int process_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &process_rank);
+
 	int array_length[7] = {10, 100, 1000, 10000, 100000, 1000000, 10000000};
 	clock_t start_time, end_time;
 	int length;
@@ -22,7 +34,16 @@ int main() {
         }
 
         start_time = clock();
+
+        //executing parallel odd-even sort
+
+        if (process_size < 2) {
+            fprintf(stderr, "Process size must be greater than 1 for %s\n", process_size);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+
         parallelOddEvenSort(array, length);
+
         end_time = clock();
 
         cout << "Name: Yunteng Yang" << endl;
