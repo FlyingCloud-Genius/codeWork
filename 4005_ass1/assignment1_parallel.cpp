@@ -31,10 +31,10 @@ int main(int argc, char** argv) {
 	int array[arrayLength];
 	if (processRank == 0) {
 		srand(time(0));
-		/*for (int i = 0; i < arrayLength; i++) {
+		for (int i = 0; i < arrayLength; i++) {
 			array[i] = rand() % 1000;
-			printf("%d ", array[i]);
-		} */
+			//printf("%d ", array[i]);
+		} 
 		/* printf("initializing the array finished... sending the array to other process...\n"); */
 		for (int i = 1; i < processSize; i++) {
 			MPI_Send(&array, arrayLength, MPI_INT, i, 0, MPI_COMM_WORLD);
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 	int startPoint = processRank * (arrayLength / processSize);
 	int endPoint = (processRank + 1) * (arrayLength / processSize);
 	int partitionLength = endPoint - startPoint;
-	for (int c = 0; c < arrayLength; c++) {
+	for (int i = 0; i < arrayLength; i++) {
 		int tempInt;
 		MPI_Status status;
 		if (trigger == 0) {
@@ -208,12 +208,12 @@ int main(int argc, char** argv) {
 	}
 
 	endTime = MPI_Wtime();
-	
-	printf("sending to 0\n");
+
+
 	MPI_Send(&array, arrayLength, MPI_INT, 0, 3, MPI_COMM_WORLD);
 
 	//information printed
-	/* for (int i = 0; i < processSize; i++) {
+	/*for (int i = 0; i < processSize; i++) {
 		if (processRank == i) {
 			printf("partition %d with subarray: ", processRank);
 			for (int j = startPoint; j < endPoint; j++) {
@@ -226,10 +226,9 @@ int main(int argc, char** argv) {
 		int arrayBuf[arrayLength];
 		MPI_Status status;
 		for (int i = 0; i < processSize; i++) {
-			printf("receiving from %d\n", i);
 			MPI_Recv(&arrayBuf, arrayLength, MPI_INT, i, 3, MPI_COMM_WORLD, &status);
-			for (int j = i * (arrayLength / processSize); j < (i + 1 * (arrayLength / processSize)); j++) {
-				printf("%d ", array[j]);
+			for (int j = i * (arrayLength / processSize); j < (i + 1) * (arrayLength / processSize); j++) {
+				printf("%d ", arrayBuf[j]);
 			}
 		}
 		printf("\n");
