@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 
 	startTime = MPI_Wtime();
 	
-\	//Odd-Even Sort	
+	//Odd-Even Sort	
 	int sorted = 0;
 	int trigger = 0;
 	int startPoint = processRank * (arrayLength / processSize);
@@ -211,7 +211,7 @@ int main(int argc, char** argv) {
 
 	MPI_Finalize();
 	//information printed
-	for (int i = 0; i < processSize; i++) {
+	/* for (int i = 0; i < processSize; i++) {
 		if (processRank == i) {
 			printf("partition %d with subarray: ", processRank);
 			for (int j = startPoint; j < endPoint; j++) {
@@ -219,7 +219,7 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
-	printf("\n");
+	printf("\n"); */
 	if (processRank == 0) {
 		printf("Name: Yunteng Yang\n");
 	    printf("student ID: 116010264\n");
