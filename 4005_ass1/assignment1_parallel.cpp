@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 			array[i] = rand() % 1000;
 			printf("%d ", array[i]);
 		}
-		printf("initializing the array finished... sending the array to other process...\n");
+		/* printf("initializing the array finished... sending the array to other process...\n"); */
 		for (int i = 1; i < processSize; i++) {
 			MPI_Send(&array, arrayLength, MPI_INT, i, 0, MPI_COMM_WORLD);
 		}
@@ -225,7 +225,7 @@ int main(int argc, char** argv) {
 	    printf("student ID: 116010264\n");
 		printf("size of the array: %d\n", arrayLength);
 	    printf("assignment 1, odd-even sort, parallel implementation.\n");
-		printf("usage of processes: %d", processSize);
+		printf("usage of processes: %d\n", processSize);
 	    printf("runTime is: %fms\n", (double) (endTime - startTime) * 1000); 
 	}
 }
