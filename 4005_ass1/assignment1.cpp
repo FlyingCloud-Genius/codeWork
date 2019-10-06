@@ -33,7 +33,7 @@ void sequentialOddEvenSort(int array[], int length) {
 }
 
 int main() {
-    int array_length[10] = {10, 100, 300, 500, 800, 1000, 3000, 5000, 8000, 10000};
+    int array_length[1] = {20};
 	clock_t start_time, end_time;
 	int length;
     for (int i = 0; i < sizeof(array_length) / sizeof (array_length[0]); i++) {
@@ -47,7 +47,11 @@ int main() {
         start_time = clock();
         sequentialOddEvenSort(array, length);
         end_time = clock();
-
+	
+		for (int j = 0; j < length; j++) {
+			cout << array[j] << " ";
+		}
+		cout << endl;
         cout << "Name: Yunteng Yang" << endl;
         cout << "student ID: 116010264" << endl;
 		cout << "size of the array: " << array_length[i] << endl;

@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 	int startPoint = processRank * (arrayLength / processSize);
 	int endPoint = (processRank + 1) * (arrayLength / processSize);
 	int partitionLength = endPoint - startPoint;
-	for (int i = 0; i < arrayLength; i++) {
+	for (int c = 0; c < arrayLength; c++) {
 		int tempInt;
 		MPI_Status status;
 		if (trigger == 0) {
@@ -208,8 +208,10 @@ int main(int argc, char** argv) {
 	}
 
 	endTime = MPI_Wtime();
+	
+	printf("sending to 0\n");
+	MPI_Send(&array, arrayLength, MPI_INT, 0, 3, MPI_COMM_WORLD);
 
-	MPI_Finalize();
 	//information printed
 	/* for (int i = 0; i < processSize; i++) {
 		if (processRank == i) {
@@ -221,6 +223,16 @@ int main(int argc, char** argv) {
 	}
 	printf("\n"); */
 	if (processRank == 0) {
+		int arrayBuf[arrayLength];
+		MPI_Status status;
+		for (int i = 0; i < processSize; i++) {
+			printf("receiving from %d\n", i);
+			MPI_Recv(&arrayBuf, arrayLength, MPI_INT, i, 3, MPI_COMM_WORLD, &status);
+			for (int j = i * (arrayLength / processSize); j < (i + 1 * (arrayLength / processSize)); j++) {
+				printf("%d ", array[j]);
+			}
+		}
+		printf("\n");
 		printf("Name: Yunteng Yang\n");
 	    printf("student ID: 116010264\n");
 		printf("size of the array: %d\n", arrayLength);
@@ -228,4 +240,5 @@ int main(int argc, char** argv) {
 		printf("usage of processes: %d\n", processSize);
 	    printf("runTime is: %fms\n", (double) (endTime - startTime) * 1000); 
 	}
+	MPI_Finalize();
 }
