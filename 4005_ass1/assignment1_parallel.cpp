@@ -31,10 +31,10 @@ int main(int argc, char** argv) {
 	int array[arrayLength];
 	if (processRank == 0) {
 		srand(time(0));
-		for (int i = 0; i < arrayLength; i++) {
+		/*for (int i = 0; i < arrayLength; i++) {
 			array[i] = rand() % 1000;
 			printf("%d ", array[i]);
-		}
+		} */
 		/* printf("initializing the array finished... sending the array to other process...\n"); */
 		for (int i = 1; i < processSize; i++) {
 			MPI_Send(&array, arrayLength, MPI_INT, i, 0, MPI_COMM_WORLD);
@@ -42,9 +42,9 @@ int main(int argc, char** argv) {
 	} else {
 		MPI_Status status;
 		MPI_Recv(&array, arrayLength, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-		for (int i = 0; i < arrayLength; i++) {
+		/* for (int i = 0; i < arrayLength; i++) {
 			printf("%d ", array[i]);
-		}
+		} */
 	}
 
 	startTime = MPI_Wtime();
