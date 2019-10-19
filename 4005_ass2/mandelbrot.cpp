@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <iostream>
 #include <cstdlib>
 #include <X11/Xlib.h>
@@ -12,7 +13,7 @@ typedef struct complextype
         } Compl;
 
 int main (int argc, char* argv[]){
-    Window          win;
+    Window          win;       
     char            *window_name = "test", *display_name = NULL;                     /* initialization for a window */
     Display         *display;
     GC              gc;   //this is a graphic content, it could be a pixel color
@@ -39,8 +40,8 @@ int main (int argc, char* argv[]){
       display_height = DisplayHeight (display, screen);
 
       /* set window size */
-    int X_RESN=6400;
-    int Y_RESN=6400;
+    int X_RESN=500;
+    int Y_RESN=500;
     width = X_RESN;
     height = Y_RESN;
 
@@ -53,7 +54,7 @@ int main (int argc, char* argv[]){
 
     border_width = 4;
     win = XCreateSimpleWindow (display, RootWindow (display, screen),
-                          x, y, width, height, border_width,
+                          x, y, width, height, border_width, 
                           WhitePixel (display, screen), WhitePixel (display, screen)); //Change to WhitePixel (display, screen) if you want a white background
 
     size_hints.flags = USPosition|USSize;
@@ -100,14 +101,14 @@ int main (int argc, char* argv[]){
     double  lengthsq, temp;
     int *output=(int *)malloc(sizeof(int) * (X_RESN * Y_RESN));
 
-    struct timeval timeStart, timeEnd, timeSystemStart;
-    double runTime=0, systemRunTime;
+    struct timeval timeStart, timeEnd, timeSystemStart; 
+    double runTime=0, systemRunTime; 
     gettimeofday(&timeStart, NULL );
 
     for(i=0; i < X_RESN; i++){
         for(j=0; j < Y_RESN; j++) {
             z.real = z.imag = 0.0;
-            c.real = ((float) j - Y_RESN/2)/(Y_RESN/4);                //scale factors for 800 x 800 window
+            c.real = ((float) j - Y_RESN/2)/(Y_RESN/4);                //scale factors for 800 x 800 window 
             c.imag = ((float) i - X_RESN/2)/(X_RESN/4);
             k = 0;
 
@@ -120,18 +121,18 @@ int main (int argc, char* argv[]){
             k++;
             } while (lengthsq < 12 && k < 100); //lengthsq and k are the threshold
             if (k >= 100) {
-              output[i*X_RESN+j]=1;
+              output[i*Y_RESN+j]=1;
             }
         }
     }
-    gettimeofday( &timeEnd, NULL );
-    runTime = (timeEnd.tv_sec - timeStart.tv_sec ) + (double)(timeEnd.tv_usec -timeStart.tv_usec)/1000000;
-    printf("runTime is %lf\n", runTime);
-
+    gettimeofday( &timeEnd, NULL ); 
+    runTime = (timeEnd.tv_sec - timeStart.tv_sec ) + (double)(timeEnd.tv_usec -timeStart.tv_usec)/1000000;  
+    printf("runTime is %lf\n", runTime); 
+    
     for (i=0;i<X_RESN;i++){
     for (int j=0;j<Y_RESN;j++){
-      if(output[i*X_RESN+j]==1){
-        XDrawPoint (display, win, gc, j, i);
+      if(output[i*Y_RESN+j]==1){
+        XDrawPoint (display, win, gc, i, j);
         usleep(1);
         //XDrawPoint cannot draw too fast, otherwise the image cannot be drawn
         //normally you could try to not use the usleep(1), it only black images are shown, try to use this
