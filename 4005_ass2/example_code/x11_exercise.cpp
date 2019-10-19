@@ -85,6 +85,7 @@ int main (int argc, char* argv[]){
     XSetForeground (display, gc, color.pixel);
     XSetBackground (display, gc, BlackPixel (display, screen));
     XSetLineAttributes (display, gc, 1, LineSolid, CapRound, JoinRound);
+
     for (int iter=0;iter<200;iter++){
         XClearWindow(display, win);
         for (int j=0;j<30;j++){
