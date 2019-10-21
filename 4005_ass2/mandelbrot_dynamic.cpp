@@ -178,10 +178,10 @@ int main (int argc, char* argv[]){
 		XSetForeground (display, gc, color.pixel);
 		XSetBackground (display, gc, BlackPixel (display, screen));
 		XSetLineAttributes (display, gc, 1, LineSolid, CapRound, JoinRound);
-		
+
 		for (int i=0;i<X_RESN;i++){
 		for (int j=0;j<Y_RESN;j++){
-		  if(output[i*Y_RESN+j]==1){
+		  if(output[j*Y_RESN+i]==1){
 		    XDrawPoint (display, win, gc, i, j);
 		    usleep(1);
 		    //XDrawPoint cannot draw too fast, otherwise the image cannot be drawn
@@ -224,8 +224,8 @@ int main (int argc, char* argv[]){
 		    	while (true) {
 					
 		    	    z.real = z.imag = 0.0;
-		    	    c.real = ((float) j - Y_RESN/2)/(Y_RESN/4);  //scale factors for 800 x 800 window 
-		    	    c.imag = ((float) i - X_RESN/2)/(X_RESN/4);
+		    	    c.real = ((float) i - Y_RESN/2)/(Y_RESN/4);  //scale factors for 800 x 800 window 
+		    	    c.imag = ((float) j - X_RESN/2)/(X_RESN/4);
 		    	    k = 0;
 		
 		    	    do  {                            // iterate for pixel color
@@ -238,10 +238,11 @@ int main (int argc, char* argv[]){
 		    	    } while (lengthsq < 12 && k < 100); //lengthsq and k are the threshold
 		    	    if (k >= 100) {
 		    	      send_array[index + 2] = 1;
-		    	    }
+		    	    } else {
+						send_array[index + 2] = 0;
+					}
 					index++;
 					i++;
-					//printf("i: %d  j: %d  k: %d \n", i, j, k);
 					if (i == X_RESN || (i == x_end && j == y_end)) {
 						i = 0;
 						break;
