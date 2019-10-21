@@ -37,8 +37,8 @@ int main (int argc, char* argv[]){
 
     /* set window size */
 	int height, width;
-    int X_RESN=800;
-    int Y_RESN=800;
+    int X_RESN=6400;
+    int Y_RESN=6400;
     width = X_RESN;
     height = Y_RESN;
 
@@ -98,7 +98,7 @@ int main (int argc, char* argv[]){
     	printf("Name: Yunteng Yang\n");
     	printf("Student ID: 116010264\n");
     	printf("MPI dynamic schedulling for assignment 2\n");
-    	printf("runTime is %lf\n", runTime);
+    	printf("runTime is %lfs\n", runTime);
 
 
 		//draw the outcome
@@ -123,12 +123,12 @@ int main (int argc, char* argv[]){
       		exit (-1);
       	}
 
+		printf("window initializing...\n");
+
       	/* get screen size */
 		screen = DefaultScreen (display);
 		display_width = DisplayWidth (display, screen);
 		display_height = DisplayHeight (display, screen);
-
-
 
 		/* set window position */
 
@@ -153,6 +153,8 @@ int main (int argc, char* argv[]){
 		XSetNormalHints (display, win, &size_hints);
 		XStoreName(display, win, window_name);
 
+		printf("opaque window initiated and position setted...\n");
+
 		/* create graphics context */
 		gc = XCreateGC (display, win, valuemask, &values);
 		XSetBackground (display, gc, BlackPixel (display, screen));
@@ -164,23 +166,29 @@ int main (int argc, char* argv[]){
 		attr[0].backing_pixel = BlackPixel (display, screen);
 
 		XChangeWindowAttributes(display, win, CWBackingStore | CWBackingPlanes | CWBackingPixel, attr);
+		
+		printf("context setted\n");
 
 		XMapWindow (display, win);
+		printf("window mapped\n");
 		XSync(display, 0);
-
+		printf("synchronized\n");
 		XFlush (display);
 
 		XColor color;
 		color.red=10000; //range from 0~65535
 		color.green=10000;
 		color.blue=10000;
-
+		
+		printf("color and graphic context setted \n");		
+	
 		Status rc1=XAllocColor(display,DefaultColormap(display, screen),&color);
 		//set the color and attribute of the graphics content
 		XSetForeground (display, gc, color.pixel);
 		XSetBackground (display, gc, BlackPixel (display, screen));
 		XSetLineAttributes (display, gc, 1, LineSolid, CapRound, JoinRound);
 		
+		printf("outputing the window\n");
 		for (i=0;i<X_RESN;i++){
 		for (int j=0;j<Y_RESN;j++){
 		  if(output[i*Y_RESN+j]==1){
