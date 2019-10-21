@@ -20,6 +20,8 @@ typedef struct complextype
 
 int main (int argc, char* argv[]){
 	int num_task = atoi(argv[1]);
+	int X_RESN = atoi(argv[2]);
+    int Y_RESN = atoi(argv[3]);
 	
 	//mpi magic
 	MPI_Init(&argc, &argv);
@@ -35,19 +37,15 @@ int main (int argc, char* argv[]){
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-
-    int X_RESN=6400;
-    int Y_RESN=6400;
-
 	Compl   z, c;
     int i,j,k;
     double  lengthsq, temp;
     int *output = (int *)malloc(sizeof(int) * (X_RESN * Y_RESN));
 
-	int sub_divide = X_RESN * Y_RESN /num_task;
+	int sub_divide = X_RESN * Y_RESN / num_task;
 	int tag = 0;
 
-	//schedulling 
+	//scheduling 
 	if (rank == MASTER) {
 		struct timeval timeStart, timeEnd, timeSystemStart; 
     	double runTime = 0, systemRunTime; 
@@ -68,6 +66,7 @@ int main (int argc, char* argv[]){
 		while (finished_task < num_task) {
 			while (avail_core.empty() == 0 && current_task < num_task) {
 				next_core = avail_core.front();
+				printf("current working node: %d \n", next_core);
 				avail_core.pop();
 				start_index = sub_divide * current_task;
 				MPI_Send(&start_index, 1, MPI_INT, next_core, tag, MPI_COMM_WORLD);
@@ -97,7 +96,6 @@ int main (int argc, char* argv[]){
     	printf("MPI dynamic schedulling for assignment 2\n");
     	printf("runTime is %lfs\n", runTime);
 
-
 		//draw the outcome
 		Window          win;       
     	char            *window_name = "test", *display_name = NULL;                     /* initialization for a window */
@@ -119,8 +117,6 @@ int main (int argc, char* argv[]){
         	                    XDisplayName (display_name) );
       		exit (-1);
       	}
-
-		printf("window initializing...\n");
 
       	/* get screen size */
 		screen = DefaultScreen (display);
@@ -155,8 +151,6 @@ int main (int argc, char* argv[]){
 		XSetNormalHints (display, win, &size_hints);
 		XStoreName(display, win, window_name);
 
-		printf("opaque window initiated and position setted...\n");
-
 		/* create graphics context */
 		gc = XCreateGC (display, win, valuemask, &values);
 		XSetBackground (display, gc, BlackPixel (display, screen));
@@ -169,20 +163,15 @@ int main (int argc, char* argv[]){
 
 		XChangeWindowAttributes(display, win, CWBackingStore | CWBackingPlanes | CWBackingPixel, attr);
 		
-		printf("context setted\n");
 
 		XMapWindow (display, win);
-		printf("window mapped\n");
 		XSync(display, 0);
-		printf("synchronized\n");
 		XFlush (display);
 
 		XColor color;
 		color.red=10000; //range from 0~65535
 		color.green=10000;
-		color.blue=10000;
-		
-		printf("color and graphic context setted \n");		
+		color.blue=10000;	
 	
 		Status rc1=XAllocColor(display,DefaultColormap(display, screen),&color);
 		//set the color and attribute of the graphics content
@@ -190,8 +179,7 @@ int main (int argc, char* argv[]){
 		XSetBackground (display, gc, BlackPixel (display, screen));
 		XSetLineAttributes (display, gc, 1, LineSolid, CapRound, JoinRound);
 		
-		printf("outputing the window\n");
-		for (i=0;i<X_RESN;i++){
+		for (int i=0;i<X_RESN;i++){
 		for (int j=0;j<Y_RESN;j++){
 		  if(output[i*Y_RESN+j]==1){
 		    XDrawPoint (display, win, gc, i, j);
@@ -205,7 +193,7 @@ int main (int argc, char* argv[]){
 		usleep(250000);
 		XFlush (display);
 		cout<<"finish running"<<endl;
-		sleep(10);
+		sleep(100);
 		return 0;
 	} 
 
@@ -225,18 +213,22 @@ int main (int argc, char* argv[]){
 			send_array[1] = start_index;
 			x_start = start_index % X_RESN;
 			x_end = (start_index + sub_divide) % X_RESN;
+			if (x_end == 0) {
+				x_end = X_RESN;
+			}
 			y_start = start_index / X_RESN;
-			y_end = (start_index + sub_divide) % X_RESN;
+			y_end = (start_index + sub_divide) / X_RESN;
 			int i = x_start, j = y_start;
 			int index = 0;
 			while (true) {
 		    	while (true) {
+					
 		    	    z.real = z.imag = 0.0;
 		    	    c.real = ((float) j - Y_RESN/2)/(Y_RESN/4);  //scale factors for 800 x 800 window 
 		    	    c.imag = ((float) i - X_RESN/2)/(X_RESN/4);
 		    	    k = 0;
 		
-		    	    do  {                                      // iterate for pixel color
+		    	    do  {                            // iterate for pixel color
 			
 					    temp = z.real*z.real - z.imag*z.imag + c.real;
 					    z.imag = 2.0*z.real*z.imag + c.imag;
@@ -245,16 +237,18 @@ int main (int argc, char* argv[]){
 					    k++;
 		    	    } while (lengthsq < 12 && k < 100); //lengthsq and k are the threshold
 		    	    if (k >= 100) {
-		    	      send_array[index + 2]=1;
+		    	      send_array[index + 2] = 1;
 		    	    }
 					index++;
 					i++;
-					if (i == X_RESN || (j == y_end && i == x_end)) {
+					//printf("i: %d  j: %d  k: %d \n", i, j, k);
+					if (i == X_RESN || (i == x_end && j == y_end)) {
+						i = 0;
 						break;
 					}
 		    	}
 				j++;
-				if (j > y_end || (j == y_end && i == x_end)) {
+				if (j > y_end || (i == x_end && j == y_end)) {
 					break;
 				}
 			}
