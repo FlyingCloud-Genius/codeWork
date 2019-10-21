@@ -35,19 +35,16 @@ int main (int argc, char* argv[]){
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    /* set window size */
-	int height, width;
+
     int X_RESN=6400;
     int Y_RESN=6400;
-    width = X_RESN;
-    height = Y_RESN;
 
 	Compl   z, c;
     int i,j,k;
     double  lengthsq, temp;
     int *output = (int *)malloc(sizeof(int) * (X_RESN * Y_RESN));
 
-	int sub_divide = width * height /num_task;
+	int sub_divide = X_RESN * Y_RESN /num_task;
 	int tag = 0;
 
 	//schedulling 
@@ -129,6 +126,11 @@ int main (int argc, char* argv[]){
 		screen = DefaultScreen (display);
 		display_width = DisplayWidth (display, screen);
 		display_height = DisplayHeight (display, screen);
+
+		/* set window size */
+		width = X_RESN;
+		height = Y_RESN;
+
 
 		/* set window position */
 
@@ -221,10 +223,10 @@ int main (int argc, char* argv[]){
 			}
 			send_array[0] = rank;
 			send_array[1] = start_index;
-			x_start = start_index % width;
-			x_end = (start_index + sub_divide) % width;
-			y_start = start_index / width;
-			y_end = (start_index + sub_divide) % width;
+			x_start = start_index % X_RESN;
+			x_end = (start_index + sub_divide) % X_RESN;
+			y_start = start_index / X_RESN;
+			y_end = (start_index + sub_divide) % X_RESN;
 			int i = x_start, j = y_start;
 			int index = 0;
 			while (true) {
@@ -247,7 +249,7 @@ int main (int argc, char* argv[]){
 		    	    }
 					index++;
 					i++;
-					if (i == width || (j == y_end && i == x_end)) {
+					if (i == X_RESN || (j == y_end && i == x_end)) {
 						break;
 					}
 		    	}
