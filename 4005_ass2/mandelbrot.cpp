@@ -12,7 +12,7 @@ typedef struct complextype
         } Compl;
 
 int main (int argc, char* argv[]){
-    /* Window          win;       
+    Window          win;       
     char            *window_name = "test", *display_name = NULL;                 
     Display         *display;
     GC              gc;   //this is a graphic content, it could be a pixel color
@@ -20,14 +20,14 @@ int main (int argc, char* argv[]){
       XGCValues       values; //value of the graphics content
     XSizeHints      size_hints;
     Pixmap          bitmap;
-    XSetWindowAttributes attr[1]; */
+    XSetWindowAttributes attr[1];
     int             width, height,              
                     x, y,                        
                     border_width,                 
                     display_width, display_height, 
                     screen;                     
 
-    /* if (  (display = XOpenDisplay (display_name)) == NULL ) {
+    if (  (display = XOpenDisplay (display_name)) == NULL ) {
        fprintf (stderr, "drawon: cannot connect to X server %s\n",
                             XDisplayName (display_name) );
       exit (-1);
@@ -36,7 +36,7 @@ int main (int argc, char* argv[]){
 
       screen = DefaultScreen (display);
       display_width = DisplayWidth (display, screen);
-      display_height = DisplayHeight (display, screen); */
+      display_height = DisplayHeight (display, screen);
 
       /* set window size */
     int X_RESN=atoi(argv[1]);
@@ -49,7 +49,7 @@ int main (int argc, char* argv[]){
     y = 0;
 
 
-    /* border_width = 4;
+    border_width = 4;
     win = XCreateSimpleWindow (display, RootWindow (display, screen),
                           x, y, width, height, border_width, 
                           WhitePixel (display, screen), WhitePixel (display, screen)); //Change to WhitePixel (display, screen) if you want a white background
@@ -90,7 +90,7 @@ int main (int argc, char* argv[]){
     //set the color and attribute of the graphics content
     XSetForeground (display, gc, color.pixel);
     XSetBackground (display, gc, BlackPixel (display, screen));
-    XSetLineAttributes (display, gc, 1, LineSolid, CapRound, JoinRound); */
+    XSetLineAttributes (display, gc, 1, LineSolid, CapRound, JoinRound);
 
     Compl   z, c;
     int i,j,k;
@@ -126,7 +126,7 @@ int main (int argc, char* argv[]){
     printf("runTime is %lf\n", runTime); 
 	printf("height and width are: %d \n", X_RESN);
     
-    /* for (i=0;i<X_RESN;i++){
+    for (i=0;i<X_RESN;i++){
     for (int j=0;j<Y_RESN;j++){
       if(output[i*Y_RESN+j]==1){
         XDrawPoint (display, win, gc, i, j);
@@ -140,6 +140,6 @@ int main (int argc, char* argv[]){
     //usleep(250000);
     XFlush (display);
     cout<<"finish running"<<endl;
-    sleep(10); */
+    sleep(10);
     return 0;
 }

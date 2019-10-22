@@ -108,7 +108,7 @@ int main (int argc, char* argv[]){
     	printf("runTime is %lfs\n", runTime);
 
 		//draw the outcome
-		/*Window          win;       
+		Window          win;       
     	char            *window_name = "test", *display_name = NULL;                    
     	Display         *display;
     	GC              gc;   //this is a graphic content, it could be a pixel color
@@ -202,7 +202,7 @@ int main (int argc, char* argv[]){
 		usleep(250000);
 		XFlush (display);
 		cout<<"finish running"<<endl;
-		sleep(100); */
+		sleep(100);
 		return 0;
 	}
 

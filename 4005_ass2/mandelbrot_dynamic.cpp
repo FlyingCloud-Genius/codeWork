@@ -99,7 +99,7 @@ int main (int argc, char* argv[]){
     	printf("runTime is %lfs\n", runTime);
 
 		//draw the outcome
-		/* Window          win;       
+		Window          win;       
     	char            *window_name = "test", *display_name = NULL;                  //    initialization for a window 
     	Display         *display;
     	GC              gc;   //this is a graphic content, it could be a pixel color
@@ -121,7 +121,7 @@ int main (int argc, char* argv[]){
       	}
 
       	/* get screen size */
-		/* screen = DefaultScreen (display);
+		screen = DefaultScreen (display);
 		display_width = DisplayWidth (display, screen);
 		display_height = DisplayHeight (display, screen);
 
@@ -154,7 +154,7 @@ int main (int argc, char* argv[]){
 		XStoreName(display, win, window_name);
 
 		/* create graphics context */
-		/* gc = XCreateGC (display, win, valuemask, &values);
+		gc = XCreateGC (display, win, valuemask, &values);
 		XSetBackground (display, gc, BlackPixel (display, screen));
 		XSetForeground (display, gc, WhitePixel (display, screen));
 		XSetLineAttributes (display, gc, 1, LineSolid, CapRound, JoinRound);
@@ -196,7 +196,7 @@ int main (int argc, char* argv[]){
 		usleep(250000);
 		XFlush (display);
 		cout<<"finish running"<<endl;
-		sleep(100); */
+		sleep(100);
 		return 0;
 	}
 
