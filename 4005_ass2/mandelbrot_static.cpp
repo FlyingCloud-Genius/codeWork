@@ -19,9 +19,8 @@ typedef struct complextype
         } Compl;
 
 int main (int argc, char* argv[]){
-	int num_task = atoi(argv[1]);
-	int X_RESN = atoi(argv[2]);
-    int Y_RESN = atoi(argv[3]);
+	int X_RESN = atoi(argv[1]);
+    int Y_RESN = atoi(argv[2]);
 	
 	//mpi magic
 	MPI_Init(&argc, &argv);
@@ -38,69 +37,84 @@ int main (int argc, char* argv[]){
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 	Compl   z, c;
-    int i,j,k;
     double  lengthsq, temp;
     int *output = (int *)malloc(sizeof(int) * (X_RESN * Y_RESN));
 
-	int sub_divide = X_RESN * Y_RESN / num_task;
+	int sub_divide = X_RESN * Y_RESN / size;
 	int tag = 0;
+	
+	struct timeval timeStart, timeEnd, timeSystemStart; 
+    double runTime = 0, systemRunTime; 
+    gettimeofday(&timeStart, NULL);
 
-	//scheduling 
-	if (rank == MASTER) {
-		struct timeval timeStart, timeEnd, timeSystemStart; 
-    	double runTime = 0, systemRunTime; 
-    	gettimeofday(&timeStart, NULL );
-		
-		queue<int> avail_core;
-    	for (int p = 1;p < size;p++){
-      		avail_core.push(p);
-    	}    
-		int current_task = 0;
-	    int next_core;
-    	int start_index;
-    	int recv_rank;
-    	int recv_start_index;
-    	int finished_task = 0;
-		int *recv_array=new int[sub_divide+2]; // the first element is rank, the second element is start_index
-		
-		while (finished_task < num_task) {
-			while (avail_core.empty() == 0 && current_task < num_task) {
-				next_core = avail_core.front();
-				avail_core.pop();
-				start_index = sub_divide * current_task;
-				MPI_Send(&start_index, 1, MPI_INT, next_core, tag, MPI_COMM_WORLD);
-				current_task++;
+
+	// processing units
+	int x_start, x_end, y_start, y_end;
+	x_start = rank * sub_divide % X_RESN;
+	x_end = (x_start + sub_divide) % X_RESN;
+	if (x_end == 0) {
+		x_end = X_RESN;
+	}
+	y_start = rank * sub_divide / X_RESN;
+	y_end = (rank * sub_divide + sub_divide) / X_RESN;
+
+	printf("start processing with x_start: %d, x_end: %d, y_start: %d, y_end: %d\n", x_start, x_end, y_start, y_end);
+
+	int i = x_start, j = y_start, k;
+	int *result_array = (int *)malloc(sizeof(int) * sub_divide);
+	int index = 0;
+	while (true) {
+    	while (true) {
+    	    z.real = z.imag = 0.0;
+    	    c.real = ((float) i - Y_RESN/2)/(Y_RESN/4);  //scale factors for 800 x 800 window 
+    	    c.imag = ((float) j - X_RESN/2)/(X_RESN/4);
+    	    k = 0;
+
+    	    do  {                            // iterate for pixel color
+	
+			    temp = z.real*z.real - z.imag*z.imag + c.real;
+			    z.imag = 2.0*z.real*z.imag + c.imag;
+			    z.real = temp;
+			    lengthsq = z.real*z.real+z.imag*z.imag;
+			    k++;
+    	    } while (lengthsq < 12 && k < 100); //lengthsq and k are the threshold
+    	    if (k >= 100) {
+    	    	result_array[index] = 1;
+    	    } else {
+				result_array[index] = 0;
 			}
-			MPI_Status status;
-			MPI_Recv(recv_array, sub_divide + 2, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
-
-			recv_rank = recv_array[0];
-			recv_start_index = recv_array[1];
-			for (int index = 0; index < sub_divide; index++) {
-				output[index + recv_start_index] = recv_array[index + 2];
+			index++;
+			i++;
+			if (i == X_RESN || (i == x_end && j == y_end - 1) || index == sub_divide) {
+				i = 0;
+				break;
 			}
-			avail_core.push(recv_rank);
-			finished_task++;
-		}
-
-		int stop_signal=-1;
-    	for (int p=1;p<size;p++){
-        	MPI_Send(&stop_signal,1,MPI_INT,p,tag,MPI_COMM_WORLD);
     	}
+		j++;
+		if (j > y_end || (i == x_end && j == y_end - 1) || index == sub_divide) {
+			printf("i: %d, j: %d, k: %d\n", i, j, k);
+			break;
+		}
+	}
 
+	printf("gathering result...\n");
+
+	MPI_Gather(result_array, sub_divide, MPI_INT, output, sub_divide, MPI_INT, 0, MPI_COMM_WORLD);
+
+	if (rank == MASTER) {
+		
 		gettimeofday( &timeEnd, NULL );
     	runTime = (timeEnd.tv_sec - timeStart.tv_sec ) + (double)(timeEnd.tv_usec -timeStart.tv_usec)/1000000;
     	printf("Name: Yunteng Yang\n");
     	printf("Student ID: 116010264\n");
-    	printf("MPI dynamic schedulling for assignment 2\n");
-		printf("running processse: %d\n", size);
-		printf("total number of tasks: %d\n", num_task);
+    	printf("MPI static schedulling for assignment 2\n");
+		printf("total number of tasks: %d\n", size);
 		printf("height and width is: %d\n", X_RESN);
     	printf("runTime is %lfs\n", runTime);
 
 		//draw the outcome
-		/* Window          win;       
-    	char            *window_name = "test", *display_name = NULL;                  //    initialization for a window 
+		/*Window          win;       
+    	char            *window_name = "test", *display_name = NULL;                    
     	Display         *display;
     	GC              gc;   //this is a graphic content, it could be a pixel color
     	unsigned long            valuemask = 0;
@@ -108,11 +122,11 @@ int main (int argc, char* argv[]){
     	XSizeHints      size_hints;
     	Pixmap          bitmap;
     	XSetWindowAttributes attr[1];
-    	int             width, height,           
-                    x, y,                       
-                    border_width,               
+    	int             width, height,               
+                    x, y,                      
+                    border_width,                
                     display_width, display_height, 
-                    screen;                        
+                    screen;                      
 
     	if (  (display = XOpenDisplay (display_name)) == NULL ) {
        		fprintf (stderr, "drawon: cannot connect to X server %s\n",
@@ -120,22 +134,20 @@ int main (int argc, char* argv[]){
       		exit (-1);
       	}
 
-      	/* get screen size */
-		/* screen = DefaultScreen (display);
+
+		screen = DefaultScreen (display);
 		display_width = DisplayWidth (display, screen);
 		display_height = DisplayHeight (display, screen);
 
-		//set window size
+
 		width = X_RESN;
 		height = Y_RESN;
 
 
-		//set window position 
 
 		x = 0;
 		y = 0;
 
-		// create opaque window 
 
 		border_width = 4;
 		win = XCreateSimpleWindow (display, RootWindow (display, screen),
@@ -153,8 +165,7 @@ int main (int argc, char* argv[]){
 		XSetNormalHints (display, win, &size_hints);
 		XStoreName(display, win, window_name);
 
-		/* create graphics context */
-		/* gc = XCreateGC (display, win, valuemask, &values);
+		gc = XCreateGC (display, win, valuemask, &values);
 		XSetBackground (display, gc, BlackPixel (display, screen));
 		XSetForeground (display, gc, WhitePixel (display, screen));
 		XSetLineAttributes (display, gc, 1, LineSolid, CapRound, JoinRound);
@@ -198,69 +209,6 @@ int main (int argc, char* argv[]){
 		cout<<"finish running"<<endl;
 		sleep(100); */
 		return 0;
-	}
-
-	// processing unit
-	if (rank != MASTER) {
-		int start_index;
-		int *send_array = new int[sub_divide + 2];
-		MPI_Status status;
-		int x_start, x_end, y_start, y_end;
-
-		while(1) {
-			MPI_Recv(&start_index, 1, MPI_INT, MASTER, tag, MPI_COMM_WORLD, &status);
-			if (start_index == -1) {
-				break;
-			}
-			send_array[0] = rank;
-			send_array[1] = start_index;
-			x_start = start_index % X_RESN;
-			x_end = (start_index + sub_divide) % X_RESN;
-			if (x_end == 0) {
-				x_end = X_RESN;
-			}
-			y_start = start_index / X_RESN;
-			y_end = (start_index + sub_divide) / X_RESN;
-			int i = x_start, j = y_start;
-			int index = 0;
-			while (true) {
-		    	while (true) {
-					
-		    	    z.real = z.imag = 0.0;
-		    	    c.real = ((float) i - Y_RESN/2)/(Y_RESN/4);  //scale factors for 800 x 800 window 
-		    	    c.imag = ((float) j - X_RESN/2)/(X_RESN/4);
-
-		    	    k = 0;
-		
-		    	    do  {                            // iterate for pixel color
-			
-					    temp = z.real*z.real - z.imag*z.imag + c.real;
-					    z.imag = 2.0*z.real*z.imag + c.imag;
-					    z.real = temp;
-					    lengthsq = z.real*z.real+z.imag*z.imag;
-					    k++;
-		    	    } while (lengthsq < 12 && k < 100); //lengthsq and k are the threshold
-		    	    if (k >= 100) {
-		    	      send_array[index + 2] = 1;
-
-		    	    } else {
-						send_array[index + 2] = 0;
-					}
-					index++;
-					i++;
-
-					if (i == X_RESN || (i == x_end && j == y_end)) {
-						i = 0;
-						break;
-					}
-		    	}
-				j++;
-				if (j > y_end || (i == x_end && j == y_end)) {
-					break;
-				}
-			}
-			MPI_Send(send_array, sub_divide + 2, MPI_INT, MASTER, tag, MPI_COMM_WORLD);
-		}
 	}
 
 	MPI_Finalize();
