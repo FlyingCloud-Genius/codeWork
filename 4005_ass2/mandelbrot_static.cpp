@@ -58,8 +58,6 @@ int main (int argc, char* argv[]){
 	y_start = rank * sub_divide / X_RESN;
 	y_end = (rank * sub_divide + sub_divide) / X_RESN;
 
-	printf("start processing with x_start: %d, x_end: %d, y_start: %d, y_end: %d\n", x_start, x_end, y_start, y_end);
-
 	int i = x_start, j = y_start, k;
 	int *result_array = (int *)malloc(sizeof(int) * sub_divide);
 	int index = 0;
@@ -92,12 +90,9 @@ int main (int argc, char* argv[]){
     	}
 		j++;
 		if (j > y_end || (i == x_end && j == y_end - 1) || index == sub_divide) {
-			printf("i: %d, j: %d, k: %d\n", i, j, k);
 			break;
 		}
 	}
-
-	printf("gathering result...\n");
 
 	MPI_Gather(result_array, sub_divide, MPI_INT, output, sub_divide, MPI_INT, 0, MPI_COMM_WORLD);
 

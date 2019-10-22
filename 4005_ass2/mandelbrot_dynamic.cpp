@@ -249,13 +249,13 @@ int main (int argc, char* argv[]){
 					index++;
 					i++;
 
-					if (i == X_RESN || (i == x_end && j == y_end)) {
+					if (i == X_RESN || (i == x_end && j == y_end) || index==sub_divide) {
 						i = 0;
 						break;
 					}
 		    	}
 				j++;
-				if (j > y_end || (i == x_end && j == y_end)) {
+				if (j > y_end || (i == x_end && j == y_end) || index == sub_divide) {
 					break;
 				}
 			}
