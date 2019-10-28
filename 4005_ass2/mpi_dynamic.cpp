@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
     for (int z = 0; z < array_size; z++) {
       array[z] = rand() - rand();
     }
+
     //printf("array[0] is %d\n",array[0]);
     //printf("MASTER process: the number of MPI tasks is: %2d\n", size);
     int current_task=0;
@@ -53,6 +54,7 @@ int main(int argc, char *argv[])
     int recv_rank;
     int recv_start_index;
     int finished_task=0;
+
     //compute the running time of the program
     struct timeval timeStart, timeEnd, timeSystemStart;
     double runTime=0, systemRunTime;

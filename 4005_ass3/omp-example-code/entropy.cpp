@@ -1,0 +1,60 @@
+#include <vector>
+#include <cmath>
+#include <iostream>
+#include <cassert>
+using namespace std;
+
+void print_vector(vector<float> &vec)
+{
+    const unsigned n = vec.size();
+    printf("(");
+    for (unsigned i = 0; i < n - 1; ++i)
+        printf("%7.4f,", vec[i]);
+    printf("%7.4f)\n", vec[n - 1]);
+}
+
+int main(void)
+{
+    const unsigned size = 9;
+    vector<float> entropy0(size), entropy1(size);
+
+#pragma omp parallel for
+    for (unsigned i = 0; i < size; i++)
+    {
+        float d = i - float(size - 1) / 2.;
+        entropy0[i] = exp(-d * d / 0.5);
+        entropy1[i] = exp(-d * d / 10.);
+    }
+
+    float sum1 = 0,
+          sum2 = 0;
+#pragma omp parallel for reduction(+ \
+                                   : sum1, sum2)
+    for (unsigned i = 0; i < size; i++)
+    {
+        sum1 += entropy0[i];
+        sum2 += entropy1[i];
+    }
+
+#pragma omp parallel for
+    for (unsigned i = 0; i < size; i++)
+    {
+        entropy0[i] /= sum1;
+        entropy1[i] /= sum2;
+    }
+
+    print_vector(entropy0);
+    print_vector(entropy1);
+
+    float ent1 = 0, ent2 = 0;
+    /* Calculate the entropy for both distributions
+    using S = - sum_i p_i log(p_i)
+    */
+
+    float entropy_change = ent2 - ent1;
+    printf("Change in entropy: %g\n", entropy_change);
+
+    assert(entropy_change > 0);
+
+    return 0;
+}
