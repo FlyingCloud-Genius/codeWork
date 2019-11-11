@@ -30,9 +30,9 @@ struct ThreadData {
 	int threadRank;
 };
 
-struct Body nbody[500];
-double vx[500];
-double vy[500];
+struct Body nbody[505];
+double vx[505];
+double vy[505];
 
 void *refresh(void *data) {
 	ThreadData *input = (ThreadData *) data;
@@ -185,7 +185,6 @@ int main (int argc,char *argv[]) {
 			ThreadData *data;
 			data->threadRank = i;
             rc = pthread_create(&tid[i], NULL, &refresh, &data);
-			printf("executed\n");
         }
         for (i = 0; i < threadNum; i++) {
             pthread_join(tid[i], NULL);
