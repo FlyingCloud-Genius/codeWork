@@ -104,7 +104,7 @@ void drawing(vector<vector<float>> tem, int N, int M) {
 
     XFlush (display);
 
-	//color initialization
+	//color initialization from blue to red
 	float red[20] = {0, 0, 0.68, 0.88, 0.69, 1, 1, 1, 1, 1,
 					 1, 1, 1, 1, 0.93, 1, 1, 1, 1, 0.55};
 	float green[20] = {0, 0, 0.85, 1, 0.89, 1, 1, 1, 1, 1,
