@@ -12,7 +12,7 @@ typedef struct complextype {
 	float real, imag;
 } Compl;
 
-void outputMatrix(vector<vector<float>> tem, int N, int M) {
+void outputMatrix(vector<vector<float> > tem, int N, int M) {
 	for (int i = 0; i < N; i++) {
 		for (int j = 0; j < M; j++) {
 			printf("%f ", tem[i][j]);
@@ -21,25 +21,27 @@ void outputMatrix(vector<vector<float>> tem, int N, int M) {
 	}
 }
 
-vector<vector<float>> jacobiDrawing(vector<vector<float>> tem, int N, int M) {
+vector<vector<float> > jacobiDrawing(vector<vector<float> > tem, int N, int M) {
 	float alpha = 0.05; // all the calculaiton melted to alpha
-	vector<vector<float>> oldTem = tem;
+	vector<vector<float> > oldTem = tem;
 	float term1, term2, term3;
 
-	for (int i = 1; i < N - 1; i++) {
-		for (int j = 1; j < M - 1; j++) {
-			term1 = oldTem[i][j];
-			term2 = alpha * (oldTem[i - 1][j] - 2 * oldTem[i][j] + oldTem[i + 1][j]);
-			term3 = alpha * (oldTem[i][j - 1] - 2 * oldTem[i][j] + oldTem[i][j + 1]);
-			tem[i][j] = term1 + term2 + term3;
-		} 
+	for (int counter = 0; counter < 100; counter++) {
+		for (int i = 1; i < N - 1; i++) {
+			for (int j = 1; j < M - 1; j++) {
+				term1 = oldTem[i][j];
+				term2 = alpha * (oldTem[i - 1][j] - 2 * oldTem[i][j] + oldTem[i + 1][j]);
+				term3 = alpha * (oldTem[i][j - 1] - 2 * oldTem[i][j] + oldTem[i][j + 1]);
+				tem[i][j] = term1 + term2 + term3;
+			} 
+		}
+		oldTem = tem;
+		//outputMatrix(tem, N, M);
 	}
-	oldTem = tem;
-	//outputMatrix(tem, N, M);
 	return tem;
 }
 
-void drawing(vector<vector<float>> tem, int N, int M) {
+void drawing(vector<vector<float> > tem, int N, int M) {
 	Window          win;       
     char            *window_name = "test", *display_name = NULL;                 
     Display         *display;
@@ -140,10 +142,10 @@ void drawing(vector<vector<float>> tem, int N, int M) {
 	}
 }
 
-vector<vector<float>> jacobiIteration(vector<vector<float>> tem, int N, int M) {
+vector<vector<float> > jacobiIteration(vector<vector<float> > tem, int N, int M) {
 	float alpha = 0.05; // all the calculaiton melted to this place
 
-	vector<vector<float>> oldTem = tem;
+	vector<vector<float> > oldTem = tem;
 	float term1, term2, term3;
 	
 	//outputMatrix(oldTem, N, M);
@@ -167,7 +169,7 @@ int main(int argc, char **argv) {
 	int M = atoi(argv[2]); //y
 
 	//initializing the problem
-	vector<vector<float>> a;
+	vector<vector<float> > a;
 	
 	for (int i = 0; i < N; i++) {
 		vector<float> temp;
