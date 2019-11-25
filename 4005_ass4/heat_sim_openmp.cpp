@@ -172,7 +172,8 @@ vector<vector<float> > jacobiIteration(vector<vector<float> > tem, int N, int M)
 int main(int argc, char **argv) {
 	int N = atoi(argv[1]); //x
 	int M = atoi(argv[2]); //y
-
+	int threadNum = atoi(argv[3]); //number of threads used
+	omp_set_num_threads(threadNum);
 	//initializing the problem
 	vector<vector<float> > a;
 	
