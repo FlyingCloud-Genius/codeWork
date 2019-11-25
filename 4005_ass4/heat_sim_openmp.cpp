@@ -151,10 +151,9 @@ vector<vector<float> > jacobiIteration(vector<vector<float> > tem, int N, int M)
 	float term1, term2, term3;
 	
 	//outputMatrix(oldTem, N, M);
-
 	int i, j;
 	for (int counter = 0; counter < 10000; counter++) {
-		#pragma omp parallel for schedule(dynamic) private(j)
+		#pragma omp parallel for private(j) private(term1, term2, term3)
 		for (i = 1; i < N - 1; i++) {
 			for (j = 1; j < M - 1; j++) {
 				term1 = oldTem[i][j];
