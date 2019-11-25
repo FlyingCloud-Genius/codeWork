@@ -6,6 +6,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
 #include <time.h>
+#include <pthread.h>
 
 using namespace std;
 
@@ -13,36 +14,43 @@ typedef struct complextype {
 	float real, imag;
 } Compl;
 
-void outputMatrix(vector<vector<float> > tem, int N, int M) {
+typedef struct thread_data {
+	int taskId;
+	float *tem;
+	float *oldTem;
+	int N;
+	int M;
+	int threadNum;
+};
+
+void outputMatrix(float *tem, int N, int M) {
 	for (int i = 0; i < N; i++) {
 		for (int j = 0; j < M; j++) {
-			printf("%f ", tem[i][j]);
+			printf("%f ", tem[i * N + j]);
 		}
 		printf("\n");
 	}
 }
 
-vector<vector<float> > jacobiDrawing(vector<vector<float> > tem, int N, int M) {
+void jacobiDrawing(float *tem, float *oldTem, int N, int M) {
 	float alpha = 0.05; // all the calculaiton melted to alpha
-	vector<vector<float> > oldTem = tem;
 	float term1, term2, term3;
 
 	for (int counter = 0; counter < 10; counter++) {
 		for (int i = 1; i < N - 1; i++) {
 			for (int j = 1; j < M - 1; j++) {
-				term1 = oldTem[i][j];
-				term2 = alpha * (oldTem[i - 1][j] - 2 * oldTem[i][j] + oldTem[i + 1][j]);
-				term3 = alpha * (oldTem[i][j - 1] - 2 * oldTem[i][j] + oldTem[i][j + 1]);
-				tem[i][j] = term1 + term2 + term3;
+				term1 = oldTem[i * N + j];
+				term2 = alpha * (oldTem[(i - 1) * N + j] - 2 * oldTem[i * N + j] + oldTem[(i + 1) * N + j]);
+				term3 = alpha * (oldTem[i * N + (j - 1)] - 2 * oldTem[i * N + j] + oldTem[i * N + (j + 1)]);
+				tem[i * N + j] = term1 + term2 + term3;
 			} 
 		}
 		oldTem = tem;
 		//outputMatrix(tem, N, M);
 	}
-	return tem;
 }
 
-void drawing(vector<vector<float> > tem, int N, int M) {
+void drawing(float *tem, float *oldTem, int N, int M) {
 	Window          win;       
     char            *window_name = "test", *display_name = NULL;                 
     Display         *display;
@@ -131,10 +139,10 @@ void drawing(vector<vector<float> > tem, int N, int M) {
 	//iterating jacobi and draw points out
 	
 	for (int counter = 0; counter < 1000; counter++) {
-		tem = jacobiDrawing(tem, N, M);
+		jacobiDrawing(tem, oldTem, N, M);
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
-				int colorNum = tem[i][j] / 500;
+				int colorNum = tem[i * N + j] / 500;
 				XSetForeground(display, gc, color[colorNum].pixel);
 				XDrawPoint(display, win, gc, i, j);
 				usleep(1);
@@ -143,46 +151,70 @@ void drawing(vector<vector<float> > tem, int N, int M) {
 	}
 }
 
-vector<vector<float> > jacobiIteration(vector<vector<float> > tem, int N, int M) {
+void *jacobiIteration(void *data) {
 	float alpha = 0.05; // all the calculaiton melted to this place
 
-	vector<vector<float> > oldTem = tem;
+	thread_data *input = (thread_data *) data;
+	int taskId = input->taskId;
+	int N = input->N;
+	int M = input->M;
+	float *tem = input->tem;
+	float *oldTem = input->oldTem;
+	int threadNum = input->threadNum;
+	
 	float term1, term2, term3;
 	
 	//outputMatrix(oldTem, N, M);
-	for (int counter = 0; counter < 10000; counter++) {
-		for (int i = 1; i < N - 1; i++) {
-			for (int j = 1; j < M - 1; j++) {
-				term1 = oldTem[i][j];
-				term2 = alpha * (oldTem[i - 1][j] - 2 * oldTem[i][j] + oldTem[i + 1][j]);
-				term3 = alpha * (oldTem[i][j - 1] - 2 * oldTem[i][j] + oldTem[i][j + 1]);
-				tem[i][j] = term1 + term2 + term3;
-			} 
-		}
-		oldTem = tem;
-		//outputMatrix(tem, N, M);
+	for (int i = taskId * N / threadNum; i < (taskId + 1) * N / threadNum; i++) {
+		for (int j = 1; j < M - 1; j++) {
+			term1 = oldTem[i * N + j];
+			term2 = alpha * (oldTem[(i - 1) * N + j] - 2 * oldTem[i * N + j] + oldTem[(i + 1) * N + j]);
+			term3 = alpha * (oldTem[i * N + (j - 1)] - 2 * oldTem[i * N + j] + oldTem[i * N + (j + 1)]);
+			tem[i * N + j] = term1 + term2 + term3;
+		} 
 	}
-	return tem;
+}
+
+void *oldTemUpdate(void *data) {
+	thread_data *input = (thread_data *) data;
+	int taskId = input->taskId;
+	int N = input->N;
+	int M = input->M;
+	float *tem = input->tem;
+	float *oldTem = input->oldTem;
+	int threadNum = input->threadNum;
+
+	for (int i = taskId * N / threadNum; i < (taskId + 1) * N / threadNum; i++) {
+		for (int j = 0; j < M; j++) {
+			oldTem[i * N + j] = tem[i * N + j];
+		}
+	}
 }
 
 int main(int argc, char **argv) {
 	int N = atoi(argv[1]); //x
 	int M = atoi(argv[2]); //y
+	int threadNum = atoi(argv[3]); //thread number
 
 	//initializing the problem
-	vector<vector<float> > a;
+	float tem[N * M];
+	float oldTem[N * M];
+
+	int rc;
+	pthread_t thread[threadNum];
+	thread_data data[threadNum];
 	
 	for (int i = 0; i < N; i++) {
-		vector<float> temp;
 		for (int j = 0; j < M; j++) {
-			temp.push_back(500);
+			tem[N * i + j] = 500;
+			oldTem[N * i + j] = 500;
 		}
-		a.push_back(temp);
 	}
 
 	//assigning temperature to the wall at the top
 	for (int j = N / 2 - 50; j < N / 2 + 50; j++) {
-		a[0][j] = 10000;
+		tem[j] = 10000;
+		oldTem[j] = 10000;
 	}
 
 	printf("start jacobi...\n");
@@ -192,8 +224,36 @@ int main(int argc, char **argv) {
     gettimeofday(&timeStart, NULL );
 
 	//jacobi iteration or call drawing (drawing contains jacobi iteration)
-	jacobiIteration(a, N, M);
-	//drawing(a, N, M);
+	for (int counter = 0; counter < 10000; counter++) {
+		for (int i = 0; i < threadNum; i++) {
+			data[i].taskId = i;
+			data[i].tem = tem;
+			data[i].oldTem = oldTem;
+			data[i].N = N;
+			data[i].M = M;//partiitoning the input
+			data[i].threadNum = threadNum;
+			rc = pthread_create(&thread[i], NULL, jacobiIteration, &data[i]);
+		}
+
+		for (int i = 0; i < threadNum; i++) {
+			pthread_join(thread[i], NULL);
+		}
+
+		for (int i = 0; i < threadNum; i++) {
+			data[i].taskId = i;
+			data[i].tem = tem;
+			data[i].oldTem = oldTem;
+			data[i].N = N;
+			data[i].M = M;
+			data[i].threadNum = threadNum;
+			rc = pthread_create(&thread[i], NULL, oldTemUpdate, &data[i]);
+		}
+
+		for (int i = 0; i < threadNum; i++) {
+			pthread_join(thread[i], NULL);
+		}
+	}
+	//drawing(tem, oldTem, N, M);
 
     gettimeofday( &timeEnd, NULL ); 
     runTime = (timeEnd.tv_sec - timeStart.tv_sec ) + (double)(timeEnd.tv_usec -timeStart.tv_usec)/1000000;  

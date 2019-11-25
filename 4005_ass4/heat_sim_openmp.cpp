@@ -28,9 +28,11 @@ vector<vector<float> > jacobiDrawing(vector<vector<float> > tem, int N, int M) {
 	vector<vector<float> > oldTem = tem;
 	float term1, term2, term3;
 
+	int i, j;
 	for (int counter = 0; counter < 10; counter++) {
-		for (int i = 1; i < N - 1; i++) {
-			for (int j = 1; j < M - 1; j++) {
+		#pragma omp parallel for private(j) private(term1, term2, term3)
+		for (i = 1; i < N - 1; i++) {
+			for (j = 1; j < M - 1; j++) {
 				term1 = oldTem[i][j];
 				term2 = alpha * (oldTem[i - 1][j] - 2 * oldTem[i][j] + oldTem[i + 1][j]);
 				term3 = alpha * (oldTem[i][j - 1] - 2 * oldTem[i][j] + oldTem[i][j + 1]);
