@@ -192,6 +192,7 @@ int main(int argc, char **argv) {
 	//printf ("end: %d, start: %d\n", endN, startN);
 	//printf("initializing finished...\n");
 	for (int counter = 0; counter < 10000; counter++) {
+		//printf("counter: %d\n", counter);
 		for (int i = startN; i < endN; i++) {
 			//printf("%d\n", i);
 			for (int j = 1; j < M - 1; j++) {

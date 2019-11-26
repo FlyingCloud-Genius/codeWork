@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <time.h>
+#include <sys/time.h>
 
 
 using namespace std;
@@ -50,8 +50,8 @@ int main(int argc, char **argv) {
 	float term1, term2, term3;
 
 	//iterating
-	clock_t timeStart, timeEnd;
-	timeStart = clock();
+	struct timeval timeStart, timeEnd;
+	gettimeofday(&timeStart, NULL);
 
 
 	for (int counter = 0; counter < 10000; counter++) {
@@ -72,8 +72,8 @@ int main(int argc, char **argv) {
 	
 	//start jacobi
 	//outputMatrix(oldTem, N, M);
-	timeEnd = clock();
-	runTime = (timeEnd - timeStart) / CLOCKS_PER_SEC;
+	gettimeofday(&timeEnd, NULL);
+	runTime = (timeEnd.tv_sec - timeStart.tv_sec ) + (double)(timeEnd.tv_usec -timeStart.tv_usec)/1000000;
 	printf("runTime is %lfs\n", runTime); 
 	printf("finish...\n");
 	

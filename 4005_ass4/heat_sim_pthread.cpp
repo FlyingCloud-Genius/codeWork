@@ -5,7 +5,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
-#include <time.h>
+#include <sys/time.h>
 #include <pthread.h>
 
 using namespace std;
@@ -173,7 +173,7 @@ void *jacobiIteration(void *data) {
 	}
 	int bound;
 	if ((taskId + 1) * N / threadNum == N) {
-		bound = n - 1;
+		bound = N - 1;
 	} else {
 		bound = (taskId + 1) * N / threadNum;
 	}
