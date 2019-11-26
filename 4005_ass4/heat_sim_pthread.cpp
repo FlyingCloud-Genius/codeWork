@@ -2,10 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <vector>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xos.h>
-#include <time.h>
+#include <sys/time.h>
 #include <pthread.h>
 
 using namespace std;
@@ -32,7 +29,7 @@ void outputMatrix(float *tem, int N, int M) {
 	}
 }
 
-void jacobiDrawing(float *tem, float *oldTem, int N, int M) {
+/* void jacobiDrawing(float *tem, float *oldTem, int N, int M) {
 	float alpha = 0.05; // all the calculaiton melted to alpha
 	float term1, term2, term3;
 
@@ -76,7 +73,6 @@ void drawing(float *tem, float *oldTem, int N, int M) {
   	display_width = DisplayWidth (display, screen);
   	display_height = DisplayHeight (display, screen);
 
-  	/* set window size */
     width = N;
     height = M;
     x = 0;
@@ -149,7 +145,7 @@ void drawing(float *tem, float *oldTem, int N, int M) {
 			}
 		}
 	}
-}
+}*/
 
 void *jacobiIteration(void *data) {
 	float alpha = 0.05; // all the calculaiton melted to this place
@@ -164,21 +160,21 @@ void *jacobiIteration(void *data) {
 	
 	float term1, term2, term3;
 	
-	int i;
+	int start;
 	//outputMatrix(oldTem, N, M);
 	if (taskId * N / threadNum == 0) {
-		i = 1;
+		start = 1;
 	} else {
-		i = taskId * N / threadNum;
+		start = taskId * N / threadNum;
 	}
 	int bound;
 	if ((taskId + 1) * N / threadNum == N) {
-		bound = n - 1;
+		bound = N - 1;
 	} else {
 		bound = (taskId + 1) * N / threadNum;
 	}
 
-	for (int i = taskId * N / threadNum; i < (taskId + 1) * N / threadNum; i++) {
+	for (int i = start; i < (taskId + 1) * N / threadNum; i++) {
 		for (int j = 1; j < M - 1; j++) {
 			term1 = oldTem[i * N + j];
 			term2 = alpha * (oldTem[(i - 1) * N + j] - 2 * oldTem[i * N + j] + oldTem[(i + 1) * N + j]);
