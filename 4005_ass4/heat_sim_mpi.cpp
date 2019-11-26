@@ -1,27 +1,18 @@
 #include <stdlib.h>
+#include "mpi.h"
 #include <stdio.h>
 #include <math.h>
-#include <vector>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xos.h>
+//#include <X11/Xlib.h>
+//#include <X11/Xutil.h>
+//#include <X11/Xos.h>
 #include <time.h>
-#include <pthread.h>
+
 
 using namespace std;
 
 typedef struct complextype {
 	float real, imag;
 } Compl;
-
-typedef struct thread_data {
-	int taskId;
-	float *tem;
-	float *oldTem;
-	int N;
-	int M;
-	int threadNum;
-};
 
 void outputMatrix(float *tem, int N, int M) {
 	for (int i = 0; i < N; i++) {
@@ -32,7 +23,7 @@ void outputMatrix(float *tem, int N, int M) {
 	}
 }
 
-void jacobiDrawing(float *tem, float *oldTem, int N, int M) {
+/* void jacobiDrawing(float *tem, float *oldTem, int N, int M) {
 	float alpha = 0.05; // all the calculaiton melted to alpha
 	float term1, term2, term3;
 
@@ -48,9 +39,9 @@ void jacobiDrawing(float *tem, float *oldTem, int N, int M) {
 		oldTem = tem;
 		//outputMatrix(tem, N, M);
 	}
-}
+} */
 
-void drawing(float *tem, float *oldTem, int N, int M) {
+/* void drawing(float *tem, float *oldTem, int N, int M) {
 	Window          win;       
     char            *window_name = "test", *display_name = NULL;                 
     Display         *display;
@@ -76,7 +67,6 @@ void drawing(float *tem, float *oldTem, int N, int M) {
   	display_width = DisplayWidth (display, screen);
   	display_height = DisplayHeight (display, screen);
 
-  	/* set window size */
     width = N;
     height = M;
     x = 0;
@@ -149,129 +139,88 @@ void drawing(float *tem, float *oldTem, int N, int M) {
 			}
 		}
 	}
-}
-
-void *jacobiIteration(void *data) {
-	float alpha = 0.05; // all the calculaiton melted to this place
-
-	thread_data *input = (thread_data *) data;
-	int taskId = input->taskId;
-	int N = input->N;
-	int M = input->M;
-	float *tem = input->tem;
-	float *oldTem = input->oldTem;
-	int threadNum = input->threadNum;
-	
-	float term1, term2, term3;
-	
-	int i;
-	//outputMatrix(oldTem, N, M);
-	if (taskId * N / threadNum == 0) {
-		i = 1;
-	} else {
-		i = taskId * N / threadNum;
-	}
-	int bound;
-	if ((taskId + 1) * N / threadNum == N) {
-		bound = n - 1;
-	} else {
-		bound = (taskId + 1) * N / threadNum;
-	}
-
-	for (int i = taskId * N / threadNum; i < (taskId + 1) * N / threadNum; i++) {
-		for (int j = 1; j < M - 1; j++) {
-			term1 = oldTem[i * N + j];
-			term2 = alpha * (oldTem[(i - 1) * N + j] - 2 * oldTem[i * N + j] + oldTem[(i + 1) * N + j]);
-			term3 = alpha * (oldTem[i * N + (j - 1)] - 2 * oldTem[i * N + j] + oldTem[i * N + (j + 1)]);
-			tem[i * N + j] = term1 + term2 + term3;
-		} 
-	}
-}
-
-void *oldTemUpdate(void *data) {
-	thread_data *input = (thread_data *) data;
-	int taskId = input->taskId;
-	int N = input->N;
-	int M = input->M;
-	float *tem = input->tem;
-	float *oldTem = input->oldTem;
-	int threadNum = input->threadNum;
-
-	for (int i = taskId * N / threadNum; i < (taskId + 1) * N / threadNum; i++) {
-		for (int j = 0; j < M; j++) {
-			oldTem[i * N + j] = tem[i * N + j];
-		}
-	}
-}
+} */
 
 int main(int argc, char **argv) {
 	int N = atoi(argv[1]); //x
 	int M = atoi(argv[2]); //y
-	int threadNum = atoi(argv[3]); //thread number
 
-	//initializing the problem
-	float tem[N * M];
-	float oldTem[N * M];
-
-	int rc;
-	pthread_t thread[threadNum];
-	thread_data data[threadNum];
+	MPI_Init(&argc, &argv);
 	
+	int size, taskId;
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &taskId);
+
+	//float *oldTem = (float *) malloc(N * M * sizeof(float));
+	float oldTem[N * M];
 	for (int i = 0; i < N; i++) {
 		for (int j = 0; j < M; j++) {
-			tem[N * i + j] = 500;
 			oldTem[N * i + j] = 500;
 		}
 	}
-
+		
 	//assigning temperature to the wall at the top
 	for (int j = N / 2 - 50; j < N / 2 + 50; j++) {
-		tem[j] = 10000;
 		oldTem[j] = 10000;
 	}
 
-	printf("start jacobi...\n");
-	
-	struct timeval timeStart, timeEnd, timeSystemStart;
-	double runTime;
-    gettimeofday(&timeStart, NULL );
-
-	//jacobi iteration or call drawing (drawing contains jacobi iteration)
-	for (int counter = 0; counter < 10000; counter++) {
-		for (int i = 0; i < threadNum; i++) {
-			data[i].taskId = i;
-			data[i].tem = tem;
-			data[i].oldTem = oldTem;
-			data[i].N = N;
-			data[i].M = M;//partiitoning the input
-			data[i].threadNum = threadNum;
-			rc = pthread_create(&thread[i], NULL, jacobiIteration, &data[i]);
-		}
-
-		for (int i = 0; i < threadNum; i++) {
-			pthread_join(thread[i], NULL);
-		}
-
-		for (int i = 0; i < threadNum; i++) {
-			data[i].taskId = i;
-			data[i].tem = tem;
-			data[i].oldTem = oldTem;
-			data[i].N = N;
-			data[i].M = M;
-			data[i].threadNum = threadNum;
-			rc = pthread_create(&thread[i], NULL, oldTemUpdate, &data[i]);
-		}
-
-		for (int i = 0; i < threadNum; i++) {
-			pthread_join(thread[i], NULL);
+	float alpha = 0.05; // all the calculaiton melted to this place
+	float term1, term2, term3;
+	int localSize = N * (taskId + 1) / size - N * taskId / size;
+	//float *tem = (float *) malloc(localSize * M * sizeof(float));
+	float tem[localSize * M];
+	for (int i = 0; i < localSize; i++) {
+		for (int j = 0; j < M; j++) {
+			tem[i * N + j] = oldTem[(i + taskId / size * N) * N + j];
 		}
 	}
-	//drawing(tem, oldTem, N, M);
 
-    gettimeofday( &timeEnd, NULL ); 
-    runTime = (timeEnd.tv_sec - timeStart.tv_sec ) + (double)(timeEnd.tv_usec -timeStart.tv_usec)/1000000;  
-    printf("runTime is %lfs\n", runTime); 
+	//iterating
+	double timeStart, timeEnd;
+	if (taskId == 0) {
+		timeStart = MPI_Wtime();
+	}
+
+	int startN, endN, index;
+	startN = 0;
+	endN = localSize;
+	if (taskId == 0) {
+		startN = 1;
+	} else if (taskId == size - 1) {
+		endN = endN - 1;
+	}
+	//printf ("end: %d, start: %d\n", endN, startN);
+	//printf("initializing finished...\n");
+	for (int counter = 0; counter < 10000; counter++) {
+		for (int i = startN; i < endN; i++) {
+			//printf("%d\n", i);
+			for (int j = 1; j < M - 1; j++) {
+				index = (N * taskId / size + i) * N + j;
+				term1 = oldTem[index];
+				term2 = alpha * (oldTem[index - N] - 2 * oldTem[index] + oldTem[index + N]);
+				term3 = alpha * (oldTem[index - 1] - 2 * oldTem[index] + oldTem[index + 1]);
+				//printf("N: %f, E: %f, S: %f, W: %f, cur: %f\n", oldTem[index + N], oldTem[index + 1], oldTem[index - N], oldTem[index - 1], tem[i * N + j]);
+				tem[i * N + j] = term1 + term2 + term3;
+			} 
+		}
+		//printf("sending the result to: %d\n", N * taskId / size * M);
+		MPI_Allgather(&tem, localSize * M, MPI_FLOAT, &oldTem, localSize * M, MPI_FLOAT, MPI_COMM_WORLD);
+		//outputMatrix(oldTem, N, M);
+	}
+
+
+	//initializing the problem
+	if (taskId == 0) {
+		double runTime;
+		
+		//start jacobi
+		//outputMatrix(oldTem, N, M);
+		timeEnd = MPI_Wtime();
+		runTime = timeEnd - timeStart;
+		printf("runTime is %lfs\n", runTime); 
+		printf("finish...\n");
+	}
 	
-	printf("finish...\n");
+
 	return 0;
 }
